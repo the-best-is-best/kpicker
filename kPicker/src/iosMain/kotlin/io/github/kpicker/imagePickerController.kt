@@ -1,12 +1,6 @@
 package io.github.kpicker
 
-import kotlinx.cinterop.CPointer
-import kotlinx.cinterop.ExperimentalForeignApi
-import kotlinx.cinterop.ObjCObjectVar
-import platform.Foundation.NSError
-import platform.Foundation.NSFileManager
 import platform.Foundation.NSURL
-import platform.Foundation.NSURLFileSizeKey
 import platform.PhotosUI.PHPickerViewController
 import platform.PhotosUI.PHPickerViewControllerDelegateProtocol
 import platform.UIKit.UIImagePickerController
@@ -17,7 +11,7 @@ import platform.UIKit.UINavigationControllerDelegateProtocol
 import platform.darwin.NSObject
 
 
-class PickerDelegate(
+class ImageVideoPickerDelegate(
     private val mediaType: MediaType,
     private val allowMultiple: Boolean,
     private val maxSelectionCount: Int? = if (allowMultiple) 5 else 1,
@@ -26,7 +20,6 @@ class PickerDelegate(
 ) : NSObject(), UIImagePickerControllerDelegateProtocol, UINavigationControllerDelegateProtocol,
     PHPickerViewControllerDelegateProtocol {
 
-    @OptIn(ExperimentalForeignApi::class)
     override fun imagePickerController(
         picker: UIImagePickerController,
         didFinishPickingMediaWithInfo: Map<Any?, *>
@@ -44,8 +37,21 @@ class PickerDelegate(
             val sizeMb = getFileSizeInMb(uri!!)
             if ((sizeMb != null && maxSizeMb != null && sizeMb < maxSizeMb) || sizeMb == null || maxSizeMb == null) {
                 when (mediaType) {
-                    MediaType.IMAGE, MediaType.VIDEO -> mediaList.add(MediaResult(uri, null))
-                    else -> mediaList.add(MediaResult(uri = null, error = "Can't select any type"))
+                    MediaType.IMAGE, MediaType.VIDEO -> mediaList.add(
+                        MediaResult(
+                            uri,
+                            name = getFileName(uri),
+                            null
+                        )
+                    )
+
+                    else -> mediaList.add(
+                        MediaResult(
+                            path = null,
+                            name = null,
+                            error = "Can't select any type"
+                        )
+                    )
                 }
             }
             if (mediaList.size > maxSelectionCount!!) {
@@ -66,23 +72,3 @@ class PickerDelegate(
     }
 }
 
-@OptIn(ExperimentalForeignApi::class)
-private
-fun getFileSizeInMb(fileUri: String): Double? {
-    val fileURL = NSURL(fileURLWithPath = fileUri)
-
-    // Use NSFileManager to get file attributes
-    val fileManager = NSFileManager.defaultManager
-    val error: CPointer<ObjCObjectVar<NSError?>>? = null
-    val attributes = fileManager.attributesOfItemAtPath(fileURL.path!!, error = error)
-
-    return if (error == null) {
-        // Get the file size in bytes
-        val fileSizeInBytes = attributes?.get(NSURLFileSizeKey) as? Long ?: 0
-        // Convert bytes to megabytes (MB)
-        fileSizeInBytes.toDouble() / (1024 * 1024)
-    } else {
-        // Handle error (e.g., file not found)
-        null
-    }
-}

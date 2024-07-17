@@ -60,3 +60,7 @@ actual fun kPicker(
 actual suspend fun getFileBytes(path: String): ByteArray {
     return File(path).readBytes()
 }
+
+actual suspend fun KFile.readBytes(): ByteArray {
+    TODO("Not yet implemented")
+}

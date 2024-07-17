@@ -76,3 +76,7 @@ actual suspend fun getFileBytes(path: String): ByteArray {
     return byteArray
 
 }
+
+actual suspend fun KFile.readBytes(): ByteArray {
+    TODO("Not yet implemented")
+}

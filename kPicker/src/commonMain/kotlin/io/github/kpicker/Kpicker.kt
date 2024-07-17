@@ -1,17 +1,24 @@
 package io.github.kpicker
 
-expect fun kPicker(
-    mediaType: MediaType,
-    allowMultiple: Boolean = false,
-    maxSelectionCount: Int? = if (allowMultiple) 5 else 1,
-    maxSizeMb: Int? = null,
-    onMediaPicked: (List<MediaResult>?) -> Unit
-)
 
-data class MediaResult(val uri: String?, val error: String?)
+expect suspend fun KFile.readBytes(): ByteArray
 
-enum class MediaType {
-    IMAGE, VIDEO
+val KFile.baseName: String
+    get() = name!!.substringBeforeLast(".", name)
+
+val KFile.extension: String
+    get() = name!!.substringAfterLast(".")
+
+
+expect class Kpicker {
+    companion object {
+        fun pick(
+            mediaType: MediaType,
+            allowMultiple: Boolean = false,
+            maxSelectionCount: Int? = if (allowMultiple) 5 else 1,
+            maxSizeMb: Int? = null,
+            onMediaPicked: (List<MediaResult>?) -> Unit
+        )
+    }
 }
 
-expect suspend fun getFileBytes(path: String): ByteArray

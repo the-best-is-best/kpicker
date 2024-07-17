@@ -13,16 +13,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.kpermissions.handler.PermissionHandler
+import io.github.kpicker.KFile
+import io.github.kpicker.Kpicker
 import io.github.kpicker.MediaType
-import io.github.kpicker.getFileBytes
-import io.github.kpicker.kPicker
+import io.github.kpicker.readBytes
 import io.github.sample.theme.AppTheme
 import kotlinx.coroutines.launch
 
 @Composable
 internal fun App() = AppTheme {
     val scope = rememberCoroutineScope()
-    var path: String? = null
+    var file: KFile? = null
     val permission = PermissionHandler()
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -30,12 +31,19 @@ internal fun App() = AppTheme {
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Button(onClick = {
+                var androidPer1 = false
+                var androidPer2 = false
+                var iosPer = false
 
-                kPicker(
-                    mediaType = MediaType.VIDEO,
+                Kpicker.pick(
+                    mediaType = MediaType.AUDIO,
                     onMediaPicked = {
-                        path = it?.first()?.uri
-                        println("path is $path")
+
+                        file = KFile(
+                            path = it?.first()?.path,
+                            name = it?.first()?.name
+                        )
+                        println(" file name is ${file?.name} file path is ${file!!.path}")
 
                     })
 
@@ -46,10 +54,10 @@ internal fun App() = AppTheme {
             Spacer(Modifier.height(10.dp))
 
             Button(onClick = {
-                if (path != null) {
+                if (file != null && file!!.path != null) {
 
                     scope.launch {
-                        val bytes = getFileBytes(path!!)
+                        val bytes = file!!.readBytes()
                         println("bytes ${bytes.size}")
                     }
                 }

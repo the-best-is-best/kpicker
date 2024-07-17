@@ -1,19 +1,12 @@
 package io.github.kpicker
 
 import kotlinx.browser.document
-import kotlinx.coroutines.await
-import org.khronos.webgl.ArrayBuffer
-import org.khronos.webgl.Uint8Array
-import org.khronos.webgl.get
 import org.w3c.dom.HTMLInputElement
 import org.w3c.dom.events.Event
-import org.w3c.files.File
-import org.w3c.files.FileReader
 import org.w3c.files.get
-import kotlin.js.Promise
 import kotlin.math.min
 
-actual fun kPicker(
+private fun kPicker(
     mediaType: MediaType,
     allowMultiple: Boolean,
     maxSelectionCount: Int?,
@@ -25,6 +18,8 @@ actual fun kPicker(
     input.accept = when (mediaType) {
         MediaType.IMAGE -> "image/*"
         MediaType.VIDEO -> "video/*"
+        MediaType.AUDIO -> "audio/*"
+        MediaType.FILE -> "*/*"
     }
     input.multiple = allowMultiple
 
@@ -57,37 +52,20 @@ actual fun kPicker(
     input.click()
 }
 
-actual suspend fun getFileBytes(path: String): ByteArray {
-    return Promise { resolve, reject ->
-        val inputElement = document.createElement("input") as HTMLInputElement
-        inputElement.type = "file"
 
-        inputElement.onchange = { event ->
-            val file = inputElement.files?.get(0)
-            if (file != null) {
-                val reader = FileReader()
+actual suspend fun KFile.readBytes(): ByteArray {
+    getFileBytes(this.path!!)
+}
 
-                reader.onload = {
-                    val arrayBuffer = reader.result as? ArrayBuffer
-                    val bytes = arrayBuffer?.let { arr ->
-                        ByteArray(arr.byteLength) { index ->
-                            (arr as Uint8Array)[index]
-                        }
-                    }
-                    resolve(bytes)
-                }
-
-                reader.onerror = {
-                    reject(Error("Error reading file"))
-                }
-
-                reader.readAsArrayBuffer(file)
-            } else {
-                reject(Error("No file selected"))
-            }
+actual class Kpicker {
+    actual companion object {
+        actual fun pick(
+            mediaType: MediaType,
+            allowMultiple: Boolean,
+            maxSelectionCount: Int?,
+            maxSizeMb: Int?,
+            onMediaPicked: (List<MediaResult>?) -> Unit
+        ) {
         }
-
-        // Programmatically trigger the file input dialog
-        inputElement.click()
-    }.await()!!
+    }
 }
