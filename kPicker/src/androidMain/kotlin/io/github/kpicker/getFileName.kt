@@ -3,6 +3,7 @@ package io.github.kpicker
 import android.content.ContentResolver
 import android.net.Uri
 import android.provider.OpenableColumns
+import java.io.File
 
 // Get the file name from the URI
 internal fun getFileName(uri: Uri, contentResolver: ContentResolver): String? {
@@ -15,6 +16,9 @@ internal fun getFileName(uri: Uri, contentResolver: ContentResolver): String? {
                 fileName = it.getString(nameIndex)
             }
         }
+    }
+    if (fileName == null) {
+        fileName = uri.path?.let { File(it).name }
     }
     return fileName
 }

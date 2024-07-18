@@ -1,6 +1,14 @@
+@file:OptIn(BetaInteropApi::class)
+
 package io.github.kpicker
 
+import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.addressOf
+import kotlinx.cinterop.pin
+import platform.Foundation.NSData
+import platform.Foundation.base64EncodedStringWithOptions
+import platform.Foundation.create
 import platform.PhotosUI.PHPickerConfiguration
 import platform.PhotosUI.PHPickerFilter
 import platform.PhotosUI.PHPickerViewController
@@ -65,6 +73,7 @@ private fun kPicker(
                 )
                 viewController.presentViewController(picker, animated = true, completion = null)
             } else {
+                println("start pick")
                 // Use UIImagePickerController for single selection
                 val picker = UIImagePickerController().apply {
                     delegate = ImageVideoPickerDelegate(
@@ -76,10 +85,12 @@ private fun kPicker(
                     )
                     mediaTypes = when (mediaType) {
                         MediaType.IMAGE -> listOf("public.image")
-                        MediaType.VIDEO -> listOf("public.movie")
-                        else -> listOf("public.image", "public.movie")
+                        MediaType.VIDEO -> listOf("public.movie", "public.video")
+                        else -> listOf("public.image", "public.movie", "public.video")
                     }
                 }
+                println("controller open")
+
                 viewController.presentViewController(picker, animated = true, completion = null)
             }
         }
@@ -120,5 +131,23 @@ private fun getViewController(): UIViewController {
 
 actual suspend fun KFile.readBytes(): ByteArray {
     return getFileBytes(this.path!!)
+}
+
+@OptIn(ExperimentalForeignApi::class)
+actual suspend fun KFile.getBase64(): String {
+    val bytes = this.readBytes()
+
+    val pinned = bytes.pin()
+    val dataPtr = pinned.addressOf(0)
+
+
+    // Create NSData from COpaquePointer
+    val nsData = NSData.create(dataPtr, bytes.size.toULong())
+    pinned.unpin()
+    // Return Base64-encoded string
+    return nsData.base64EncodedStringWithOptions(
+        0u
+
+    )
 }
 

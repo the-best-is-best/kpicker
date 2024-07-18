@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.dp
 import io.github.kpicker.KFile
 import io.github.kpicker.Kpicker
 import io.github.kpicker.MediaType
+import io.github.kpicker.getBase64
 import io.github.kpicker.readBytes
 import io.github.sample.theme.AppTheme
 import kotlinx.coroutines.launch
@@ -32,10 +33,11 @@ internal fun App() = AppTheme {
 
 
                 Kpicker.pick(
-                    allowMultiple = true,
-                    mediaType = MediaType.IMAGE,
+                    allowMultiple = false,
+                    mediaType = MediaType.VIDEO,
+                    maxSizeMb = Int.MAX_VALUE,
                     onMediaPicked = {
-
+                        println("error ${it?.first()?.error} - path ${it?.first()?.path}")
                         file = KFile(
                             path = it?.first()?.path,
                             name = it?.first()?.name
@@ -55,7 +57,7 @@ internal fun App() = AppTheme {
 
                     scope.launch {
                         val bytes = file!!.readBytes()
-                        println("bytes ${bytes.size}")
+                        println("bytes ${bytes.size} base64 ${file!!.getBase64()}")
                     }
                 }
 

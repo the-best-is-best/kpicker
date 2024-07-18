@@ -22,3 +22,4 @@ expect class Kpicker {
     }
 }
 
+expect suspend fun KFile.getBase64(): String

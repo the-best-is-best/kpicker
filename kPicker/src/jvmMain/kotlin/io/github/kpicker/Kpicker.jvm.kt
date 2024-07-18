@@ -4,6 +4,7 @@ import java.awt.FileDialog
 import java.awt.Frame
 import java.io.File
 import java.io.FilenameFilter
+import java.util.Base64
 
 
 private fun kPicker(
@@ -81,4 +82,8 @@ actual class Kpicker {
             )
         }
     }
+}
+
+actual suspend fun KFile.getBase64(): String {
+    return Base64.getEncoder().encodeToString(this.readBytes())
 }

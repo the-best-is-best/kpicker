@@ -1,6 +1,7 @@
 package io.github.kpicker
 
 import android.net.Uri
+import android.util.Base64
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -178,4 +179,10 @@ actual class Kpicker {
 // Extension function to read bytes from KFile
 actual suspend fun KFile.readBytes(): ByteArray {
     return File(this.path!!).readBytes()
+}
+
+actual suspend fun KFile.getBase64(): String {
+    val bytes = this.readBytes()
+
+    return Base64.encodeToString(bytes, Base64.DEFAULT)
 }

@@ -78,3 +78,10 @@ actual class Kpicker {
         }
     }
 }
+
+actual suspend fun KFile.getBase64(): String {
+    val encodedString = this.readBytes().joinToString("") { it.toInt().toChar().toString() }
+    return btoa(encodedString)
+}
+
+external fun btoa(data: String): String
