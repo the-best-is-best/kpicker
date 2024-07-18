@@ -40,7 +40,13 @@ private fun kPicker(
                 if (file != null) {
                     val fileSize = file.size.toDouble() / (1024 * 1024) // Size in MB
                     if (maxSizeMb == null || fileSize <= maxSizeMb) {
-                        results.add(MediaResult(file.name, null)) // Use file URL if needed
+                        results.add(
+                            MediaResult(
+                                file.name,
+                                file.name,
+                                null
+                            )
+                        ) // Use file URL if needed
                     }
                 }
             }
@@ -54,7 +60,7 @@ private fun kPicker(
 
 
 actual suspend fun KFile.readBytes(): ByteArray {
-    getFileBytes(this.path!!)
+    return getFileBytes(this.path!!)
 }
 
 actual class Kpicker {
@@ -66,6 +72,9 @@ actual class Kpicker {
             maxSizeMb: Int?,
             onMediaPicked: (List<MediaResult>?) -> Unit
         ) {
+            kPicker(
+                mediaType, allowMultiple, maxSelectionCount, maxSizeMb, onMediaPicked
+            )
         }
     }
 }

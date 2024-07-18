@@ -36,7 +36,8 @@ internal fun App() = AppTheme {
                 var iosPer = false
 
                 Kpicker.pick(
-                    mediaType = MediaType.AUDIO,
+                    allowMultiple = true,
+                    mediaType = MediaType.VIDEO,
                     onMediaPicked = {
 
                         file = KFile(

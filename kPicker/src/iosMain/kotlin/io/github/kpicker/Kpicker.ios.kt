@@ -1,9 +1,7 @@
 package io.github.kpicker
 
 import kotlinx.cinterop.ExperimentalForeignApi
-import platform.CoreServices.kUTTypeImage
 import platform.CoreServices.kUTTypeItem
-import platform.CoreServices.kUTTypeMovie
 import platform.PhotosUI.PHPickerConfiguration
 import platform.PhotosUI.PHPickerFilter
 import platform.PhotosUI.PHPickerViewController
@@ -78,9 +76,9 @@ private fun kPicker(
                         onMediaPicked = onMediaPicked
                     )
                     mediaTypes = when (mediaType) {
-                        MediaType.IMAGE -> listOf(kUTTypeImage as String)
-                        MediaType.VIDEO -> listOf(kUTTypeMovie as String)
-                        else -> listOf(kUTTypeImage as String, kUTTypeMovie as String)
+                        MediaType.IMAGE -> listOf("public.image")
+                        MediaType.VIDEO -> listOf("public.movie")
+                        else -> listOf("public.image", "public.movie")
                     }
                 }
                 viewController.presentViewController(picker, animated = true, completion = null)
@@ -101,7 +99,7 @@ private fun kPicker(
 //            viewController.presentViewController(picker, animated = true, completion = null)
 //        }
 
-        MediaType.FILE -> {
+        MediaType.AUDIO, MediaType.FILE -> {
             val documentPicker = UIDocumentPickerViewController(
                 documentTypes = listOf(kUTTypeItem as String),
                 inMode = if (allowMultiple) UIDocumentPickerMode.UIDocumentPickerModeImport else UIDocumentPickerMode.UIDocumentPickerModeOpen
