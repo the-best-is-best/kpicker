@@ -5,7 +5,8 @@ import java.awt.Frame
 import java.io.File
 import java.io.FilenameFilter
 
-actual fun kPicker(
+
+private fun kPicker(
     mediaType: MediaType,
     allowMultiple: Boolean,
     maxSelectionCount: Int?,
@@ -45,7 +46,7 @@ actual fun kPicker(
         val results = selectedFiles.take(effectiveMaxSelectionCount).mapNotNull { file ->
             val fileSizeMb = file.length() / (1024 * 1024) // Convert bytes to MB
             if (maxSizeMb == null || fileSizeMb <= maxSizeMb) {
-                MediaResult(file.absolutePath, null)
+                MediaResult(file.absolutePath, file.name, null)
             } else {
                 null // Exceeds max size
             }
@@ -57,10 +58,27 @@ actual fun kPicker(
     }
 }
 
-actual suspend fun getFileBytes(path: String): ByteArray {
+private suspend fun getFileBytes(path: String): ByteArray {
     return File(path).readBytes()
 }
 
+
 actual suspend fun KFile.readBytes(): ByteArray {
-    TODO("Not yet implemented")
+    return getFileBytes(this.path!!)
+}
+
+actual class Kpicker {
+    actual companion object {
+        actual fun pick(
+            mediaType: MediaType,
+            allowMultiple: Boolean,
+            maxSelectionCount: Int?,
+            maxSizeMb: Int?,
+            onMediaPicked: (List<MediaResult>?) -> Unit
+        ) {
+            kPicker(
+                mediaType, allowMultiple, maxSelectionCount, maxSizeMb, onMediaPicked
+            )
+        }
+    }
 }

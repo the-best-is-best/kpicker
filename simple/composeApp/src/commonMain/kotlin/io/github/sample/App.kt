@@ -12,7 +12,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import io.github.kpermissions.handler.PermissionHandler
 import io.github.kpicker.KFile
 import io.github.kpicker.Kpicker
 import io.github.kpicker.MediaType
@@ -24,20 +23,17 @@ import kotlinx.coroutines.launch
 internal fun App() = AppTheme {
     val scope = rememberCoroutineScope()
     var file: KFile? = null
-    val permission = PermissionHandler()
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = Alignment.Center,
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Button(onClick = {
-                var androidPer1 = false
-                var androidPer2 = false
-                var iosPer = false
+
 
                 Kpicker.pick(
                     allowMultiple = true,
-                    mediaType = MediaType.FILE,
+                    mediaType = MediaType.IMAGE,
                     onMediaPicked = {
 
                         file = KFile(

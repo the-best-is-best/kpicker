@@ -1,11 +1,12 @@
 package io.github.kpicker
 
-import android.content.Context
 import android.net.Uri
 import androidx.activity.ComponentActivity
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
 import java.io.File
+
+// Enum class to represent different media types
 
 actual class Kpicker {
     actual companion object {
@@ -18,26 +19,56 @@ actual class Kpicker {
         }
 
         // Retrieve the application context
-        fun getAppContext(): Context {
+        fun getAppContext(): ComponentActivity {
             if (!::appContext.isInitialized) {
                 throw IllegalStateException("Kpicker has not been initialized with context.")
             }
             return appContext
         }
 
-        private lateinit var singlePickerLauncher: ActivityResultLauncher<String>
-        private lateinit var multiplePickerLauncher: ActivityResultLauncher<String>
+        private lateinit var singlePickerLauncherImage: ActivityResultLauncher<String>
+        private lateinit var multiplePickerLauncherImage: ActivityResultLauncher<String>
+        private lateinit var singlePickerLauncherVideo: ActivityResultLauncher<String>
+        private lateinit var multiplePickerLauncherVideo: ActivityResultLauncher<String>
+        private lateinit var singlePickerLauncherAudio: ActivityResultLauncher<String>
+        private lateinit var multiplePickerLauncherAudio: ActivityResultLauncher<String>
+        private lateinit var singlePickerLauncherFile: ActivityResultLauncher<Array<String>>
+        private lateinit var multiplePickerLauncherFile: ActivityResultLauncher<Array<String>>
 
         // Initialize the pickers
         private fun initializePickers() {
             val activity = appContext
-            singlePickerLauncher =
+            singlePickerLauncherImage =
                 activity.registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-                    handleSingleResult(uri)
+                    handleSingleResult(MediaType.IMAGE, uri)
                 }
-            multiplePickerLauncher =
+            multiplePickerLauncherImage =
                 activity.registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
-                    handleMultipleResults(uris)
+                    handleMultipleResults(MediaType.IMAGE, uris)
+                }
+            singlePickerLauncherVideo =
+                activity.registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+                    handleSingleResult(MediaType.VIDEO, uri)
+                }
+            multiplePickerLauncherVideo =
+                activity.registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
+                    handleMultipleResults(MediaType.VIDEO, uris)
+                }
+            singlePickerLauncherAudio =
+                activity.registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+                    handleSingleResult(MediaType.AUDIO, uri)
+                }
+            multiplePickerLauncherAudio =
+                activity.registerForActivityResult(ActivityResultContracts.GetMultipleContents()) { uris ->
+                    handleMultipleResults(MediaType.AUDIO, uris)
+                }
+            singlePickerLauncherFile =
+                activity.registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+                    handleSingleResult(MediaType.FILE, uri)
+                }
+            multiplePickerLauncherFile =
+                activity.registerForActivityResult(ActivityResultContracts.OpenMultipleDocuments()) { uris ->
+                    handleMultipleResults(MediaType.FILE, uris)
                 }
         }
 
@@ -62,14 +93,6 @@ actual class Kpicker {
             maxSizeMb: Int?,
             onMediaPicked: (List<MediaResult>?) -> Unit
         ) {
-
-            val mimeType = when (mediaType) {
-                MediaType.IMAGE -> "image/*"
-                MediaType.VIDEO -> "video/*"
-                MediaType.AUDIO -> "audio/*"
-                MediaType.FILE -> "*/*"
-            }
-
             Companion.maxSelectionCount = when {
                 allowMultiple && (maxSelectionCount == null) -> 5
                 !allowMultiple && (maxSelectionCount == null) -> 1
@@ -79,16 +102,44 @@ actual class Kpicker {
             Companion.maxSizeMb = maxSizeMb
             onMediaPickedCallback = onMediaPicked
 
-            if (allowMultiple) {
-                multiplePickerLauncher.launch(mimeType)
-            } else {
-                singlePickerLauncher.launch(mimeType)
+            when (mediaType) {
+                MediaType.IMAGE -> {
+                    if (allowMultiple) {
+                        multiplePickerLauncherImage.launch("image/*")
+                    } else {
+                        singlePickerLauncherImage.launch("image/*")
+                    }
+                }
+
+                MediaType.VIDEO -> {
+                    if (allowMultiple) {
+                        multiplePickerLauncherVideo.launch("video/*")
+                    } else {
+                        singlePickerLauncherVideo.launch("video/*")
+                    }
+                }
+
+                MediaType.AUDIO -> {
+                    if (allowMultiple) {
+                        multiplePickerLauncherAudio.launch("audio/*")
+                    } else {
+                        singlePickerLauncherAudio.launch("audio/*")
+                    }
+                }
+
+                MediaType.FILE -> {
+                    if (allowMultiple) {
+                        multiplePickerLauncherFile.launch(arrayOf("*/*"))
+                    } else {
+                        singlePickerLauncherFile.launch(arrayOf("*/*"))
+                    }
+                }
             }
         }
 
         // Handle the single result
-        private fun handleSingleResult(uri: Uri?) {
-            val activity = getAppContext() as ComponentActivity
+        private fun handleSingleResult(mediaType: MediaType, uri: Uri?) {
+            val activity = getAppContext()
             if (uri != null) {
                 val fileName = getFileName(uri, activity.contentResolver)
                 val fileSize = getFileSize(uri, activity.contentResolver)
@@ -98,16 +149,16 @@ actual class Kpicker {
                 } else {
                     MediaResult(null, null, "Selected file exceeds maximum size of $maxSizeMb MB")
                 }
-                onMediaPickedCallback?.invoke(listOf(result))
+                onMediaPickedCallback?.invoke(listOfNotNull(result))
             } else {
                 onMediaPickedCallback?.invoke(null)
             }
         }
 
         // Handle multiple results
-        private fun handleMultipleResults(uris: List<Uri>) {
-            val activity = getAppContext() as ComponentActivity
-            val results = uris.mapNotNull { uri ->
+        private fun handleMultipleResults(mediaType: MediaType, uris: List<Uri>) {
+            val activity = getAppContext()
+            val results = uris.take(maxSelectionCount ?: 1).mapNotNull { uri ->
                 val fileName = getFileName(uri, activity.contentResolver)
                 val fileSize = getFileSize(uri, activity.contentResolver)
                 val file = createFileFromUri(activity, uri, fileName)
@@ -116,14 +167,14 @@ actual class Kpicker {
                 } else {
                     null // File is larger than maxSizeMb, so we ignore it
                 }
-            }.take(maxSelectionCount!!)
+            }
+
             onMediaPickedCallback?.invoke(results.ifEmpty { null }) // Return null if no valid results
         }
 
 
     }
 }
-
 // Extension function to read bytes from KFile
 actual suspend fun KFile.readBytes(): ByteArray {
     return File(this.path!!).readBytes()

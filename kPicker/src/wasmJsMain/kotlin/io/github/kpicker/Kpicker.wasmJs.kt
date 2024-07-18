@@ -13,7 +13,7 @@ import org.w3c.files.File
 import org.w3c.files.get
 import kotlin.math.min
 
-actual fun kPicker(
+private fun kPicker(
     mediaType: MediaType,
     allowMultiple: Boolean,
     maxSelectionCount: Int?,
@@ -25,6 +25,8 @@ actual fun kPicker(
     input.accept = when (mediaType) {
         MediaType.IMAGE -> "image/*"
         MediaType.VIDEO -> "video/*"
+        MediaType.AUDIO -> "audio/*"
+        MediaType.FILE -> "*/*"
     }
     input.multiple = allowMultiple
 
@@ -50,6 +52,7 @@ actual fun kPicker(
                     results.add(
                         MediaResult(
                             file.name,
+                            file.name,
                             null
                         )
                     ) // Store filename or more metadata if needed
@@ -64,7 +67,7 @@ actual fun kPicker(
     input.click()
 }
 
-actual suspend fun getFileBytes(path: String): ByteArray {
+private suspend fun getFileBytes(path: String): ByteArray {
     val response = window.fetch(path).await<Response>()
     val arrayBuffer = response.arrayBuffer().await<ArrayBuffer>()
 
@@ -78,5 +81,21 @@ actual suspend fun getFileBytes(path: String): ByteArray {
 }
 
 actual suspend fun KFile.readBytes(): ByteArray {
-    TODO("Not yet implemented")
+    return getFileBytes(this.path!!)
+}
+
+actual class Kpicker {
+    actual companion object {
+        actual fun pick(
+            mediaType: MediaType,
+            allowMultiple: Boolean,
+            maxSelectionCount: Int?,
+            maxSizeMb: Int?,
+            onMediaPicked: (List<MediaResult>?) -> Unit
+        ) {
+            kPicker(
+                mediaType, allowMultiple, maxSelectionCount, maxSizeMb, onMediaPicked
+            )
+        }
+    }
 }
