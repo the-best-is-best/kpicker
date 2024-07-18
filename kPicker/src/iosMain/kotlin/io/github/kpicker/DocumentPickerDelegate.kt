@@ -1,17 +1,18 @@
 package io.github.kpicker
 
+import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.ObjCObjectVar
+import kotlinx.cinterop.pointed
+import kotlinx.cinterop.value
 import platform.Foundation.NSError
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSURL
 import platform.Foundation.NSURLFileSizeKey
 import platform.Foundation.lastPathComponent
-import platform.UIKit.UIApplication
 import platform.UIKit.UIDocumentPickerDelegateProtocol
 import platform.UIKit.UIDocumentPickerViewController
-import platform.UIKit.UIViewController
 import platform.darwin.NSObject
 
 internal class DocumentPickerDelegate(
@@ -43,30 +44,22 @@ internal class DocumentPickerDelegate(
         controller.dismissViewControllerAnimated(true, completion = null)
     }
 
-    @OptIn(ExperimentalForeignApi::class)
+    @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
     private fun getFileSizeInMb(fileUri: String): Double? {
         val fileURL = NSURL(fileURLWithPath = fileUri)
         val fileManager = NSFileManager.defaultManager
         val error: CPointer<ObjCObjectVar<NSError?>>? = null
         val attributes = fileManager.attributesOfItemAtPath(fileURL.path!!, error = error)
 
-        return if (error == null) {
-            val fileSizeInBytes = attributes?.get(NSURLFileSizeKey) as? Long ?: 0
+        return if (attributes != null) {
+            val fileSizeInBytes = attributes[NSURLFileSizeKey] as? Long ?: 0
             fileSizeInBytes.toDouble() / (1024 * 1024) // Convert bytes to megabytes
         } else {
+            error?.pointed?.value?.let {
+                println("Error retrieving attributes: $it")
+            }
             null // Handle error (e.g., file not found)
         }
     }
-}
 
-fun presentDocumentPicker(maxSizeMb: Int?, onDocumentPicked: (List<MediaResult>?) -> Unit) {
-    val documentPicker = UIDocumentPickerViewController(
-
-    )
-    documentPicker.delegate = DocumentPickerDelegate(maxSizeMb, onDocumentPicked)
-    getViewController().presentViewController(documentPicker, animated = true, completion = null)
-}
-
-private fun getViewController(): UIViewController {
-    return UIApplication.sharedApplication.keyWindow?.rootViewController ?: UIViewController()
 }

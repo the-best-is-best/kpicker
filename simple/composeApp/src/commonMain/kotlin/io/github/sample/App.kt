@@ -37,7 +37,7 @@ internal fun App() = AppTheme {
 
                 Kpicker.pick(
                     allowMultiple = true,
-                    mediaType = MediaType.VIDEO,
+                    mediaType = MediaType.FILE,
                     onMediaPicked = {
 
                         file = KFile(

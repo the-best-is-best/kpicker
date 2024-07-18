@@ -1,7 +1,6 @@
 package io.github.kpicker
 
 import kotlinx.cinterop.ExperimentalForeignApi
-import platform.CoreServices.kUTTypeItem
 import platform.PhotosUI.PHPickerConfiguration
 import platform.PhotosUI.PHPickerFilter
 import platform.PhotosUI.PHPickerViewController
@@ -101,7 +100,7 @@ private fun kPicker(
 
         MediaType.AUDIO, MediaType.FILE -> {
             val documentPicker = UIDocumentPickerViewController(
-                documentTypes = listOf(kUTTypeItem as String),
+                documentTypes = listOf("public.item"),
                 inMode = if (allowMultiple) UIDocumentPickerMode.UIDocumentPickerModeImport else UIDocumentPickerMode.UIDocumentPickerModeOpen
             ).apply {
                 this.delegate = DocumentPickerDelegate(
